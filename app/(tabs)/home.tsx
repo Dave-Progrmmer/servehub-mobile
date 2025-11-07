@@ -1,3 +1,5 @@
+// Updated app/(tabs)/home.tsx with search functionality
+
 import { useState, useEffect } from 'react';
 import {
   View,
@@ -6,7 +8,6 @@ import {
   FlatList,
   TouchableOpacity,
   StyleSheet,
-  Image,
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
@@ -22,19 +23,17 @@ export default function HomeScreen() {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
 
   const categories = ['All', 'Cleaning', 'Plumbing', 'Electrical', 'Gardening', 'Painting'];
 
   useEffect(() => {
     fetchServices();
-  }, [selectedCategory, searchQuery]);
+  }, [selectedCategory]);
 
   const fetchServices = async () => {
     try {
       const params = new URLSearchParams();
-      if (searchQuery) params.append('search', searchQuery);
       if (selectedCategory !== 'All') params.append('category', selectedCategory);
       
       const response = await api.get(`/services?${params.toString()}`, false);
@@ -55,7 +54,7 @@ export default function HomeScreen() {
   const renderService = ({ item }: { item: Service }) => (
     <TouchableOpacity
       style={styles.serviceCard}
-      onPress={() => router.push(`/service/${item._id}`)}
+      onPress={() => router.push(`/service/${item._id}` as any)}
     >
       <View style={styles.serviceImage}>
         <Text style={styles.serviceIcon}>🏠</Text>
@@ -111,19 +110,17 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
+      {/* Search Bar - Navigate to search screen */}
+      <TouchableOpacity 
+        style={styles.searchContainer}
+        onPress={() => router.push('/search' as any)}
+      >
         <Ionicons name="search" size={20} color="#6B7280" style={styles.searchIcon} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search services..."
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
-        <TouchableOpacity style={styles.filterButton}>
+        <Text style={styles.searchPlaceholder}>Search services...</Text>
+        <View style={styles.filterButton}>
           <Ionicons name="options" size={20} color="#FFFFFF" />
-        </TouchableOpacity>
-      </View>
+        </View>
+      </TouchableOpacity>
 
       {/* Categories */}
       <View style={styles.categoriesContainer}>
@@ -165,7 +162,7 @@ export default function HomeScreen() {
         ListHeaderComponent={
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Popular Services</Text>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push('/search' as any)}>
               <Text style={styles.seeAll}>See All</Text>
             </TouchableOpacity>
           </View>
@@ -223,14 +220,15 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
+    paddingVertical: 12,
   },
   searchIcon: {
     marginRight: 12,
   },
-  searchInput: {
+  searchPlaceholder: {
     flex: 1,
-    paddingVertical: 12,
     fontSize: 16,
+    color: '#9CA3AF',
   },
   filterButton: {
     width: 36,
