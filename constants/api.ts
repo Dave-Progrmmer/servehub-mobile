@@ -1,0 +1,1 @@
+export const API_URL = 'https://serve-hub-green.vercel.app/api'
