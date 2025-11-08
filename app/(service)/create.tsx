@@ -247,7 +247,7 @@ export default function CreateServiceScreen() {
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Price *</Text>
               <View style={styles.priceInput}>
-                <Text style={styles.priceSymbol}>$</Text>
+                <Text style={styles.priceSymbol}>₦</Text>
                 <TextInput
                   style={styles.priceField}
                   placeholder="0.00"
