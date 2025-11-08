@@ -8,6 +8,9 @@ export default function RootLayout() {
         <Stack.Screen name="index" />
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="(service)" />  {/* ADD THIS LINE */}
+        <Stack.Screen name="search" />
+        <Stack.Screen name="create-service" />
       </Stack>
     </AuthProvider>
   );

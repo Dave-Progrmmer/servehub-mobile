@@ -1,5 +1,3 @@
-// Updated app/(tabs)/home.tsx with search functionality
-
 import { useState, useEffect } from 'react';
 import {
   View,
@@ -54,7 +52,7 @@ export default function HomeScreen() {
   const renderService = ({ item }: { item: Service }) => (
     <TouchableOpacity
       style={styles.serviceCard}
-      onPress={() => router.push(`/service/${item._id}` as any)}
+      onPress={() => router.push(`/(service)/${item._id}`)}
     >
       <View style={styles.serviceImage}>
         <Text style={styles.serviceIcon}>🏠</Text>
@@ -80,7 +78,7 @@ export default function HomeScreen() {
           </View>
         </View>
         <View style={styles.priceRow}>
-          <Text style={styles.price}>${item.price}</Text>
+        <Text style={styles.price}>₦{item.price.toLocaleString()}</Text>
           <TouchableOpacity style={styles.bookButton}>
             <Text style={styles.bookButtonText}>Book Now</Text>
           </TouchableOpacity>
@@ -110,10 +108,10 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Search Bar - Navigate to search screen */}
+      {/* Search Bar */}
       <TouchableOpacity 
         style={styles.searchContainer}
-        onPress={() => router.push('/search' as any)}
+        onPress={() => router.push('/(search)' as any)}
       >
         <Ionicons name="search" size={20} color="#6B7280" style={styles.searchIcon} />
         <Text style={styles.searchPlaceholder}>Search services...</Text>
@@ -162,7 +160,7 @@ export default function HomeScreen() {
         ListHeaderComponent={
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Popular Services</Text>
-            <TouchableOpacity onPress={() => router.push('/search' as any)}>
+            <TouchableOpacity onPress={() => router.push('/(search)' as any)}>
               <Text style={styles.seeAll}>See All</Text>
             </TouchableOpacity>
           </View>

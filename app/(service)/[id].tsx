@@ -1,3 +1,4 @@
+// File: app/(service)/[id].tsx - Updated with Nigerian Naira
 import { useState, useEffect } from 'react';
 import {
   View,
@@ -7,7 +8,6 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
-  Image,
   Modal,
   TextInput,
 } from 'react-native';
@@ -130,7 +130,7 @@ export default function ServiceDetailScreen() {
                 <Text style={styles.rating}>{service.rating.toFixed(1)}</Text>
                 <Text style={styles.reviews}>({service.reviewCount} reviews)</Text>
               </View>
-              <Text style={styles.price}>${service.price}</Text>
+              <Text style={styles.price}>₦{service.price.toLocaleString()}</Text>
             </View>
           </View>
 
@@ -193,7 +193,7 @@ export default function ServiceDetailScreen() {
         <View style={styles.bottomBar}>
           <View style={styles.priceContainer}>
             <Text style={styles.priceLabel}>Total Price</Text>
-            <Text style={styles.priceValue}>${service.price}</Text>
+            <Text style={styles.priceValue}>₦{service.price.toLocaleString()}</Text>
           </View>
           <TouchableOpacity
             style={styles.bookButton}
@@ -258,7 +258,7 @@ export default function ServiceDetailScreen() {
                 </View>
                 <View style={[styles.summaryRow, styles.summaryTotal]}>
                   <Text style={styles.summaryTotalLabel}>Total</Text>
-                  <Text style={styles.summaryTotalValue}>${service.price}</Text>
+                  <Text style={styles.summaryTotalValue}>₦{service.price.toLocaleString()}</Text>
                 </View>
               </View>
 
@@ -464,15 +464,6 @@ const styles = StyleSheet.create({
     color: '#374151',
     marginLeft: 12,
     flex: 1,
-  },
-  reviewsPlaceholder: {
-    alignItems: 'center',
-    paddingVertical: 40,
-  },
-  reviewsPlaceholderText: {
-    fontSize: 14,
-    color: '#9CA3AF',
-    marginTop: 12,
   },
   bottomBar: {
     flexDirection: 'row',
