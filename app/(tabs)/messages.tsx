@@ -77,7 +77,7 @@ export default function MessagesScreen() {
   const renderConversation = ({ item }: { item: Conversation }) => (
     <TouchableOpacity
       style={styles.conversationCard}
-      onPress={() => router.push(`/chat/${item.userId}`)}
+      onPress={() => router.push(`/chat/${item.userId}` as any)}
     >
       <View style={styles.avatar}>
         <Text style={styles.avatarText}>
@@ -100,6 +100,7 @@ export default function MessagesScreen() {
           <Text style={styles.badgeText}>{item.unreadCount}</Text>
         </View>
       )}
+      <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
     </TouchableOpacity>
   );
 
@@ -115,6 +116,9 @@ export default function MessagesScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Messages</Text>
+        <Text style={styles.subtitle}>
+          {conversations.length} {conversations.length === 1 ? 'conversation' : 'conversations'}
+        </Text>
       </View>
 
       {conversations.length === 0 ? (
@@ -124,6 +128,12 @@ export default function MessagesScreen() {
           <Text style={styles.emptyText}>
             Start booking services to chat with providers
           </Text>
+          <TouchableOpacity
+            style={styles.browseButton}
+            onPress={() => router.push('/(tabs)/home')}
+          >
+            <Text style={styles.browseButtonText}>Browse Services</Text>
+          </TouchableOpacity>
         </View>
       ) : (
         <FlatList
@@ -161,6 +171,11 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     color: '#111827',
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#6B7280',
   },
   list: {
     padding: 16,
@@ -205,10 +220,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#111827',
+    flex: 1,
   },
   time: {
     fontSize: 12,
     color: '#9CA3AF',
+    marginLeft: 8,
   },
   lastMessage: {
     fontSize: 14,
@@ -222,7 +239,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 6,
-    marginLeft: 8,
+    marginRight: 8,
   },
   badgeText: {
     color: '#FFFFFF',
@@ -246,5 +263,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6B7280',
     textAlign: 'center',
+    marginBottom: 24,
+  },
+  browseButton: {
+    backgroundColor: '#3B82F6',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  browseButtonText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '600',
   },
 });

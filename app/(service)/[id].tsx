@@ -1,4 +1,4 @@
-// File: app/(service)/[id].tsx - Updated with Nigerian Naira
+// File: app/(service)/[id].tsx - Fixed with proper date validation and image display
 import { useState, useEffect } from 'react';
 import {
   View,
@@ -10,6 +10,7 @@ import {
   Alert,
   Modal,
   TextInput,
+  Image,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -28,6 +29,7 @@ export default function ServiceDetailScreen() {
   const [selectedDate, setSelectedDate] = useState('');
   const [bookingNotes, setBookingNotes] = useState('');
   const [booking, setBooking] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {
     fetchService();
@@ -45,23 +47,69 @@ export default function ServiceDetailScreen() {
     }
   };
 
+  const validateDate = (dateString: string): boolean => {
+    // Check format YYYY-MM-DD
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(dateString)) {
+      return false;
+    }
+
+    // Parse date
+    const [year, month, day] = dateString.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+    
+    // Check if date is valid
+    if (
+      date.getFullYear() !== year ||
+      date.getMonth() !== month - 1 ||
+      date.getDate() !== day
+    ) {
+      return false;
+    }
+
+    // Check if date is in the future
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (date < today) {
+      return false;
+    }
+
+    return true;
+  };
+
   const handleBooking = async () => {
     if (!selectedDate) {
       Alert.alert('Error', 'Please select a date');
       return;
     }
 
+    if (!validateDate(selectedDate)) {
+      Alert.alert(
+        'Invalid Date',
+        'Please enter a valid date in YYYY-MM-DD format (e.g., 2024-12-25). Date must be today or in the future.'
+      );
+      return;
+    }
+
     setBooking(true);
     try {
+      // Create ISO date string at noon UTC to avoid timezone issues
+      const [year, month, day] = selectedDate.split('-').map(Number);
+      const bookingDate = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+      
       await api.post('/bookings', {
         service: service?._id,
         provider: service?.provider._id,
-        date: new Date(selectedDate).toISOString(),
+        date: bookingDate.toISOString(),
         totalPrice: service?.price,
-        notes: bookingNotes,
+        notes: bookingNotes.trim(),
       });
 
       setShowBookingModal(false);
+      setSelectedDate('');
+      setBookingNotes('');
+      
       Alert.alert(
         'Success',
         'Booking request sent! The provider will review your request.',
@@ -79,6 +127,15 @@ export default function ServiceDetailScreen() {
       pathname: '/(tabs)/messages',
       params: { userId: service?.provider._id },
     });
+  };
+
+  // Auto-fill today's date helper
+  const fillTodayDate = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    setSelectedDate(`${year}-${month}-${day}`);
   };
 
   if (loading) {
@@ -103,14 +160,55 @@ export default function ServiceDetailScreen() {
     );
   }
 
+  const hasPhotos = service.photos && service.photos.length > 0;
+
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scrollView}>
-        {/* Header Image */}
+        {/* Header Image/Photos */}
         <View style={styles.imageContainer}>
-          <View style={styles.imagePlaceholder}>
-            <Text style={styles.imagePlaceholderText}>🏠</Text>
-          </View>
+          {hasPhotos ? (
+            <>
+              <ScrollView
+                horizontal
+                pagingEnabled
+                showsHorizontalScrollIndicator={false}
+                onScroll={(e) => {
+                  const index = Math.round(
+                    e.nativeEvent.contentOffset.x / e.nativeEvent.layoutMeasurement.width
+                  );
+                  setCurrentImageIndex(index);
+                }}
+                scrollEventThrottle={16}
+              >
+                {service.photos.map((photo, index) => (
+                  <Image
+                    key={index}
+                    source={{ uri: photo }}
+                    style={styles.servicePhoto}
+                    resizeMode="cover"
+                  />
+                ))}
+              </ScrollView>
+              {service.photos.length > 1 && (
+                <View style={styles.photoIndicator}>
+                  {service.photos.map((_, index) => (
+                    <View
+                      key={index}
+                      style={[
+                        styles.photoIndicatorDot,
+                        currentImageIndex === index && styles.photoIndicatorDotActive,
+                      ]}
+                    />
+                  ))}
+                </View>
+              )}
+            </>
+          ) : (
+            <View style={styles.imagePlaceholder}>
+              <Text style={styles.imagePlaceholderText}>🏠</Text>
+            </View>
+          )}
           <TouchableOpacity
             style={styles.headerBackButton}
             onPress={() => router.back()}
@@ -139,9 +237,16 @@ export default function ServiceDetailScreen() {
             <Text style={styles.sectionTitle}>Service Provider</Text>
             <View style={styles.providerCard}>
               <View style={styles.providerAvatar}>
-                <Text style={styles.providerAvatarText}>
-                  {service.provider.name.charAt(0).toUpperCase()}
-                </Text>
+                {service.provider.profilePic ? (
+                  <Image
+                    source={{ uri: service.provider.profilePic }}
+                    style={styles.providerAvatarImage}
+                  />
+                ) : (
+                  <Text style={styles.providerAvatarText}>
+                    {service.provider.name.charAt(0).toUpperCase()}
+                  </Text>
+                )}
               </View>
               <View style={styles.providerInfo}>
                 <Text style={styles.providerName}>{service.provider.name}</Text>
@@ -220,18 +325,24 @@ export default function ServiceDetailScreen() {
               </TouchableOpacity>
             </View>
 
-            <View style={styles.modalBody}>
+            <ScrollView style={styles.modalBody}>
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Select Date</Text>
+                <Text style={styles.inputLabel}>Select Date *</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="YYYY-MM-DD (e.g., 2024-12-25)"
                   value={selectedDate}
                   onChangeText={setSelectedDate}
+                  maxLength={10}
                 />
-                <Text style={styles.inputHint}>
-                  Enter date in YYYY-MM-DD format
-                </Text>
+                <View style={styles.dateHelpers}>
+                  <Text style={styles.inputHint}>
+                    Enter date in YYYY-MM-DD format
+                  </Text>
+                  <TouchableOpacity onPress={fillTodayDate}>
+                    <Text style={styles.todayButton}>Use Today</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
 
               <View style={styles.inputGroup}>
@@ -250,7 +361,9 @@ export default function ServiceDetailScreen() {
               <View style={styles.summaryCard}>
                 <View style={styles.summaryRow}>
                   <Text style={styles.summaryLabel}>Service</Text>
-                  <Text style={styles.summaryValue}>{service.title}</Text>
+                  <Text style={styles.summaryValue} numberOfLines={1}>
+                    {service.title}
+                  </Text>
                 </View>
                 <View style={styles.summaryRow}>
                   <Text style={styles.summaryLabel}>Provider</Text>
@@ -273,7 +386,7 @@ export default function ServiceDetailScreen() {
                   <Text style={styles.confirmButtonText}>Confirm Booking</Text>
                 )}
               </TouchableOpacity>
-            </View>
+            </ScrollView>
           </View>
         </View>
       </Modal>
@@ -320,6 +433,28 @@ const styles = StyleSheet.create({
     height: 280,
     backgroundColor: '#EFF6FF',
     position: 'relative',
+  },
+  servicePhoto: {
+    width: 400, // Match screen width approximately
+    height: 280,
+  },
+  photoIndicator: {
+    position: 'absolute',
+    bottom: 16,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  photoIndicatorDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+  },
+  photoIndicatorDotActive: {
+    backgroundColor: '#FFFFFF',
   },
   imagePlaceholder: {
     flex: 1,
@@ -411,6 +546,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#3B82F6',
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'hidden',
+  },
+  providerAvatarImage: {
+    width: '100%',
+    height: '100%',
   },
   providerAvatarText: {
     color: '#FFFFFF',
@@ -547,10 +687,20 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E5E7EB',
   },
+  dateHelpers: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 6,
+  },
   inputHint: {
     fontSize: 12,
     color: '#9CA3AF',
-    marginTop: 6,
+  },
+  todayButton: {
+    fontSize: 12,
+    color: '#3B82F6',
+    fontWeight: '600',
   },
   textArea: {
     height: 100,
@@ -575,6 +725,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#111827',
+    flex: 1,
+    textAlign: 'right',
   },
   summaryTotal: {
     borderTopWidth: 1,
@@ -597,6 +749,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
+    marginBottom: 20,
   },
   confirmButtonDisabled: {
     opacity: 0.6,

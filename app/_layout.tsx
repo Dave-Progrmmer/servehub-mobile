@@ -8,9 +8,10 @@ export default function RootLayout() {
         <Stack.Screen name="index" />
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="(service)" />  {/* ADD THIS LINE */}
+        <Stack.Screen name="(service)" />
         <Stack.Screen name="search" />
         <Stack.Screen name="create-service" />
+        <Stack.Screen name="chat/[userId]" options={{ presentation: 'card' }} />
       </Stack>
     </AuthProvider>
   );
